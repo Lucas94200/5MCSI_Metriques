@@ -36,5 +36,32 @@ def mongraphique():
 def histogramme():
     return render_template('histogramme.html')
   
+@app.route('/commits/')
+def commits():
+  
+    repo_url = "https://api.github.com/repos/Lucas94200/5MCSI_Metriques/commits"
+    response = requests.get(repo_url)
+    
+    if response.status_code != 200:
+        return jsonify({"error": "Failed to fetch commits from GitHub."})
+
+    commits_data = response.json()
+    results = {}
+
+    for commit in commits_data:
+     
+        commit_date = commit['commit']['author']['date']
+      
+        date_object = datetime.strptime(commit_date, '%Y-%m-%dT%H:%M:%SZ')
+        hour = date_object.strftime('%H:00')  # Grouper par heure
+        
+        if hour in results:
+            results[hour] += 1
+        else:
+            results[hour] = 1
+
+    chart_data = [{"hour": hour, "count": count} for hour, count in results.items()]
+    return jsonify(chart_data)
+  
 if __name__ == "__main__":
   app.run(debug=True)
