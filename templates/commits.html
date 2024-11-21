@@ -1,79 +1,95 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Activité des Commits</title>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f8ff; /* Bleu ciel */
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .chart-container {
-            width: 80%;
-            max-width: 800px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commits Minute par Minute</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    canvas {
+      max-width: 600px;
+      margin: 20px auto;
+    }
+  </style>
 </head>
 <body>
-    <div class="chart-container">
-        <h2>Nombre de commits par heure</h2>
-        <div id="chart_div"></div>
-    </div>
-    <script>
-        google.charts.load('current', { packages: ['corechart', 'bar'] });
-        google.charts.setOnLoadCallback(drawChart);
+  <h1>Graphique des Commits Minute par Minute</h1>
+  <canvas id="commitChart"></canvas>
 
-        async function drawChart() {
-            // Effectuer une requête API vers l'URL GitHub
-            const repoUrl = "https://api.github.com/repos/Lucas94200/5MCSI_Metriques/commits";
+  <script>
+    const repoURL = "https://api.github.com/repos/Lucas94200/5MCSI_Metriques/commits";
+    const extractMinutesURL = "/extract-minutes"; // Route Flask
 
-            try {
-                const response = await fetch(repoUrl);
-                if (!response.ok) {
-                    throw new Error(HTTP error! Status: ${response.status});
-                }
+    // Fonction pour récupérer les données de l'API GitHub
+    async function fetchCommits() {
+      try {
+        const response = await fetch(repoURL);
+        if (!response.ok) throw new Error(`Erreur : ${response.status}`);
+        const commits = await response.json();
+        
+        // Extraire les minutes depuis les dates des commits
+        const minutesData = await Promise.all(
+          commits.map(async (commit) => {
+            const date = commit.commit.author.date;
+            const res = await fetch(`${extractMinutesURL}/${date}`);
+            const { minutes } = await res.json();
+            return minutes;
+          })
+        );
 
-                const commitsData = await response.json();
-                const results = {};
+        // Regrouper les commits par minute
+        const commitsByMinute = minutesData.reduce((acc, minute) => {
+          acc[minute] = (acc[minute] || 0) + 1;
+          return acc;
+        }, {});
 
-                // Traiter les données des commits
-                commitsData.forEach(commit => {
-                    const commitDate = commit.commit.author.date; // Date du commit
-                    const dateObject = new Date(commitDate); // Conversion en objet Date
-                    const hour = dateObject.getHours().toString().padStart(2, '0') + ":00"; // Heure formatée HH:00
+        return commitsByMinute;
+      } catch (error) {
+        console.error("Erreur lors de la récupération des commits :", error);
+      }
+    }
 
-                    results[hour] = (results[hour] || 0) + 1; // Compter les commits par heure
-                });
+    // Fonction pour afficher le graphique
+    async function displayChart() {
+      const commitsByMinute = await fetchCommits();
+      
+      const labels = Array.from({ length: 60 }, (_, i) => i); // 0 à 59 minutes
+      const data = labels.map((minute) => commitsByMinute[minute] || 0);
 
-                // Préparer les données pour Google Charts
-                const dataTable = new google.visualization.DataTable();
-                dataTable.addColumn('string', 'Heure');
-                dataTable.addColumn('number', 'Commits');
+      const ctx = document.getElementById("commitChart").getContext("2d");
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Nombre de commits par minute",
+            data: data,
+            backgroundColor: "rgba(75, 192, 192, 0.2)",
+            borderColor: "rgba(75, 192, 192, 1)",
+            borderWidth: 1,
+          }],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+    }
 
-                Object.entries(results).forEach(([hour, count]) => {
-                    dataTable.addRow([hour, count]);
-                });
-
-                const options = {
-                    title: 'Activité des commits par heure',
-                    chartArea: { width: '70%' },
-                    hAxis: { title: 'Heure', minValue: 0 },
-                    vAxis: { title: 'Nombre de commits' },
-                    colors: ['#000000'] /* Noir pour les barres */
-                };
-
-                const chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
-                chart.draw(dataTable, options);
-            } catch (error) {
-                console.error("Erreur lors de la récupération des commits :", error);
-            }
-        }
-    </script>
+    // Appeler la fonction pour afficher le graphique
+    displayChart();
+  </script>
 </body>
 </html>
