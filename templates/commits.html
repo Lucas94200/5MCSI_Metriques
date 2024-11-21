@@ -1,59 +1,12 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Activité des Commits</title>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f8ff; /* Bleu ciel */
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .chart-container {
-            width: 80%;
-            max-width: 800px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commits Graph</title>
 </head>
 <body>
-    <div class="chart-container">
-        <h2>Nombre de commits par heure</h2>
-        <div id="chart_div"></div>
-    </div>
-    <script>
-        google.charts.load('current', { packages: ['corechart', 'bar'] });
-        google.charts.setOnLoadCallback(drawChart);
-
-        function drawChart() {
-            fetch('/commits/')  // Récupère les données de l'API /commits/
-                .then(response => response.json())
-                .then(data => {
-                    var dataTable = new google.visualization.DataTable();
-                    dataTable.addColumn('string', 'Heure');
-                    dataTable.addColumn('number', 'Commits');
-
-                    // Ajouter les données au tableau
-                    data.forEach(entry => {
-                        dataTable.addRow([entry.hour, entry.count]);
-                    });
-
-                    var options = {
-                        title: 'Activité des commits par heure',
-                        chartArea: { width: '70%' },
-                        hAxis: { title: 'Heure', minValue: 0 },
-                        vAxis: { title: 'Nombre de commits' },
-                        colors: ['#000000'] /* Noir pour les barres */
-                    };
-
-                    var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
-                    chart.draw(dataTable, options);
-                });
-        }
-    </script>
+    <h1>Nombre de Commits par Minute</h1>
+    <img src="data:image/png;base64,{{ graph_url }}" alt="Graphique des commits">
 </body>
 </html>
