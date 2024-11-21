@@ -22,7 +22,7 @@
 </head>
 <body>
     <div class="chart-container">
-        <h2>Nombre de commits par heure</h2>
+        <h2>Nombre de commits par minute</h2>
         <div id="chart_div"></div>
     </div>
     <script>
@@ -46,24 +46,25 @@
                 commitsData.forEach(commit => {
                     const commitDate = commit.commit.author.date; // Date du commit
                     const dateObject = new Date(commitDate); // Conversion en objet Date
-                    const hour = dateObject.getHours().toString().padStart(2, '0') + ":00"; // Heure formatée HH:00
+                    const minute = dateObject.getHours().toString().padStart(2, '0') + ":" + 
+                                   dateObject.getMinutes().toString().padStart(2, '0'); // Format HH:mm
 
-                    results[hour] = (results[hour] || 0) + 1; // Compter les commits par heure
+                    results[minute] = (results[minute] || 0) + 1; // Compter les commits par minute
                 });
 
                 // Préparer les données pour Google Charts
                 const dataTable = new google.visualization.DataTable();
-                dataTable.addColumn('string', 'Heure');
+                dataTable.addColumn('string', 'Minute');
                 dataTable.addColumn('number', 'Commits');
 
-                Object.entries(results).forEach(([hour, count]) => {
-                    dataTable.addRow([hour, count]);
+                Object.entries(results).forEach(([minute, count]) => {
+                    dataTable.addRow([minute, count]);
                 });
 
                 const options = {
-                    title: 'Activité des commits par heure',
+                    title: 'Activité des commits par minute',
                     chartArea: { width: '70%' },
-                    hAxis: { title: 'Heure', minValue: 0 },
+                    hAxis: { title: 'Minute', minValue: 0 },
                     vAxis: { title: 'Nombre de commits' },
                     colors: ['#000000'] /* Noir pour les barres */
                 };
