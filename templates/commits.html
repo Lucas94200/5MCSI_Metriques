@@ -16,7 +16,7 @@
       color: #333;
     }
     canvas {
-      max-width: 600px;
+      max-width: 800px; /* Augmentation de la largeur */
       margin: 20px auto;
     }
   </style>
@@ -73,19 +73,35 @@
           datasets: [{
             label: "Nombre de commits par minute",
             data: data,
-            backgroundColor: "rgba(75, 192, 192, 0.2)",
-            borderColor: "rgba(75, 192, 192, 1)",
+            backgroundColor: "rgba(0, 0, 139, 0.2)", /* Bleu foncé avec transparence */
+            borderColor: "rgba(0, 0, 139, 1)", /* Bleu foncé pur */
             borderWidth: 1,
           }],
         },
         options: {
+          responsive: true,
+          maintainAspectRatio: false,
           scales: {
             y: {
               beginAtZero: true,
             },
           },
+          plugins: {
+            legend: {
+              labels: {
+                font: {
+                  size: 14, /* Taille du texte de la légende */
+                },
+              },
+            },
+          },
         },
       });
+
+      // Redimensionner le canvas
+      const canvas = document.getElementById("commitChart");
+      canvas.style.height = "400px"; /* Hauteur ajustée */
+      canvas.style.width = "800px"; /* Largeur ajustée */
     }
 
     // Appeler la fonction pour afficher le graphique
