@@ -41,44 +41,9 @@ def mongraphique():
 def histogramme():
     return render_template('histogramme.html')
   
-@app.route('/commits/')
+@app.route('/commits_graph/')
 def commits_graph():
-    # API GitHub pour récupérer les commits
-    url = "https://api.github.com/repos/Lucas94200/5MCSI_Metriques/commits"
-    response = requests.get(url)
-    
-    if response.status_code != 200:
-        return jsonify({"error": "Failed to fetch commits from GitHub API"}), response.status_code
-    
-    commits = response.json()
-    
-    # Extraire les minutes des dates de commits
-    minutes = []
-    for commit in commits:
-        date_string = commit['commit']['author']['date']
-        date_object = datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ')
-        minutes.append(date_object.minute)
-    
-    # Compter les commits par minute
-    commit_count = Counter(minutes)
-    
-    # Générer le graphique
-    plt.figure(figsize=(10, 6))
-    plt.bar(commit_count.keys(), commit_count.values())
-    plt.title('Nombre de Commits par Minute')
-    plt.xlabel('Minute')
-    plt.ylabel('Nombre de Commits')
-    plt.grid(axis='y')
-    
-    # Sauvegarder le graphique en base64 pour affichage dans HTML
-    img = io.BytesIO()
-    plt.savefig(img, format='png')
-    img.seek(0)
-    graph_url = base64.b64encode(img.getvalue()).decode('utf8')
-    plt.close()
-
-    return render_template("commits.html", graph_url=graph_url)
-
+    return render_template('commits.html')
   
 if __name__ == "__main__":
   app.run(debug=True)
