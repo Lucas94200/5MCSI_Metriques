@@ -4,6 +4,11 @@ from flask import json
 from datetime import datetime
 from urllib.request import urlopen
 import sqlite3
+import requests
+from collections import Counter
+import matplotlib.pyplot as plt
+import io
+import base64
                                                                                                                                        
 app = Flask(__name__)                                                                                                                  
                                                                                                                                        
@@ -37,35 +42,43 @@ def histogramme():
     return render_template('histogramme.html')
   
 @app.route('/commits/')
-def commits():
-  
-    repo_url = "https://api.github.com/repos/Lucas94200/5MCSI_Metriques/commits"
-    response = requests.get(repo_url)
+def commits_graph():
+    # API GitHub pour récupérer les commits
+    url = "https://api.github.com/repos/OpenRSI/5MCSI_Metriques/commits"
+    response = requests.get(url)
     
     if response.status_code != 200:
-        return jsonify({"error": "Failed to fetch commits from GitHub."})
+        return jsonify({"error": "Failed to fetch commits from GitHub API"}), response.status_code
+    
+    commits = response.json()
+    
+    # Extraire les minutes des dates de commits
+    minutes = []
+    for commit in commits:
+        date_string = commit['commit']['author']['date']
+        date_object = datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ')
+        minutes.append(date_object.minute)
+    
+    # Compter les commits par minute
+    commit_count = Counter(minutes)
+    
+    # Générer le graphique
+    plt.figure(figsize=(10, 6))
+    plt.bar(commit_count.keys(), commit_count.values())
+    plt.title('Nombre de Commits par Minute')
+    plt.xlabel('Minute')
+    plt.ylabel('Nombre de Commits')
+    plt.grid(axis='y')
+    
+    # Sauvegarder le graphique en base64 pour affichage dans HTML
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    graph_url = base64.b64encode(img.getvalue()).decode('utf8')
+    plt.close()
 
-    commits_data = response.json()
-    results = {}
+    return render_template("commits.html", graph_url=graph_url)
 
-    for commit in commits_data:
-     
-        commit_date = commit['commit']['author']['date']
-      
-        date_object = datetime.strptime(commit_date, '%Y-%m-%dT%H:%M:%SZ')
-        hour = date_object.strftime('%H:00')  # Grouper par heure
-        
-        if hour in results:
-            results[hour] += 1
-        else:
-            results[hour] = 1
-
-    chart_data = [{"hour": hour, "count": count} for hour, count in results.items()]
-    return jsonify(chart_data)
-  
-@app.route('/commits_graph/')
-def commits_graph():
-    return render_template('commits.html')
   
 if __name__ == "__main__":
   app.run(debug=True)
