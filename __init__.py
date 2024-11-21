@@ -4,11 +4,6 @@ from flask import json
 from datetime import datetime
 from urllib.request import urlopen
 import sqlite3
-import requests
-from collections import Counter
-import matplotlib.pyplot as plt
-import io
-import base64
                                                                                                                                        
 app = Flask(__name__)                                                                                                                  
                                                                                                                                        
