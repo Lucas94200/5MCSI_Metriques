@@ -63,5 +63,9 @@ def commits():
     chart_data = [{"hour": hour, "count": count} for hour, count in results.items()]
     return jsonify(chart_data)
   
+@app.route('/commits_graph/')
+def commits_graph():
+    return render_template('commits.html')
+  
 if __name__ == "__main__":
   app.run(debug=True)
